@@ -1,16 +1,34 @@
 <script setup lang="ts">
-import { useUserStore } from '~/stores/user'
+import { Switch } from '@headlessui/vue'
+import { defineEmits, defineProps, ref, toRef, watch, withDefaults } from 'vue'
 
-const user = useUserStore()
-const name = ref(user.savedName)
+const emit = defineEmits<{
+  (e: 'toggled', toggle: boolean): void
+}>()
 
-const router = useRouter()
-const go = () => {
-  if (name.value)
-    router.push(`/hi/${encodeURIComponent(name.value)}`)
+interface Props {
+  enabled?: boolean
+  labels: {
+    left: string
+    right: string
+  }
 }
 
-const { t } = useI18n()
+const props = withDefaults(defineProps<Props>(), {
+  enabled: false,
+})
+
+const enabled = ref(props.enabled)
+const labels = toRef(props, 'labels')
+
+watch(
+  () => props.enabled,
+  () => {
+    enabled.value = props.enabled
+  },
+)
+
+watch(enabled, () => emit('toggled', enabled.value))
 </script>
 
 <template>
@@ -31,7 +49,7 @@ const { t } = useI18n()
 
     <input
       id="input"
-      v-model="name"
+      v-model="enabled"
       :placeholder="t('intro.whats-your-name')"
       :aria-label="t('intro.whats-your-name')"
       type="text"
